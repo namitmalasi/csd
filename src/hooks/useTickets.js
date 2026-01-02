@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getTickets,
   createTicket,
@@ -10,15 +10,17 @@ export default function useTickets() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchTickets = async () => {
-      setLoading(true);
-      const res = await getTickets();
-      setTickets(res.data);
-      setLoading(false);
-    };
-    fetchTickets();
+  const fetchTickets = useCallback(async () => {
+    setLoading(true);
+    const res = await getTickets();
+    setTickets(res.data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchTickets();
+  }, [fetchTickets]);
 
   return {
     tickets,
