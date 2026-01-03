@@ -1,12 +1,32 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Navbar from "../components/Navbar";
 import TicketTable from "../components/TicketTable";
 import TicketForm from "../components/TicketForm";
 import useTickets from "../hooks/useTickets";
+import Filters from "../components/Filters";
 
 export default function Dashboard() {
-  const { tickets, loading, fetchTickets } = useTickets();
+  const { tickets, loading } = useTickets();
   const [open, setOpen] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("All");
+  const [priority, setPriority] = useState("All");
+
+  const filteredTickets = useMemo(() => {
+    return tickets.filter((ticket) => {
+      const matchesSearch =
+        ticket.customerName.toLowerCase().includes(search.toLowerCase()) ||
+        ticket.subject.toLowerCase().includes(search.toLowerCase());
+
+      const matchesStatus = status === "All" || ticket.status === status;
+
+      const matchesPriority =
+        priority === "All" || ticket.priority === priority;
+
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
+  }, [tickets, search, status, priority]);
 
   return (
     <>
@@ -22,20 +42,24 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* Filters */}
+        <Filters
+          search={search}
+          setSearch={setSearch}
+          status={status}
+          setStatus={setStatus}
+          priority={priority}
+          setPriority={setPriority}
+        />
+
         {loading ? (
-          <p>Loading tickets...</p>
+          <p className="mt-4">Loading tickets...</p>
         ) : (
-          <TicketTable tickets={tickets} />
+          <TicketTable tickets={filteredTickets} />
         )}
       </div>
 
-      {open && (
-        <TicketForm
-          closeModal={() => setOpen(false)}
-          onSuccess={fetchTickets}
-        />
-      )}
+      {open && <TicketForm closeModal={() => setOpen(false)} />}
     </>
   );
 }
-  
